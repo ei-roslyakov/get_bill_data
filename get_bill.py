@@ -91,10 +91,10 @@ def pretty_console_output(data: list) -> None:
         data_to_write = [item["TimePeriod"]["Start"], item["TimePeriod"]["End"], item["Total"]["BlendedCost"]["Amount"]]
         p_data.append(data_to_write)
 
-        table = AsciiTable(p_data)
-        table.inner_row_border = True
+    table = AsciiTable(p_data)
+    table.inner_row_border = True
 
-        print(table.table)
+    print(table.table)
 
 
 def main():
