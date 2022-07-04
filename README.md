@@ -5,9 +5,14 @@
 ```python
 pip3 install -r requirements.txt 
 ```
-### Run the script
+### To use AWS profile (profile must be configured)
 ```python
 python3 ./get_bill.py --profile=rei-prod --start='2022-01-01' --end='2022-06-01'
+```
+
+### To use role
+```python
+python3 ./get_bill.py --role='arn:aws:iam::948691256895:role/su-get-bill-data-access' --start='2022-01-01' --end='2022-06-01'
 ```
 
 ### Script arguments
