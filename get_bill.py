@@ -34,7 +34,6 @@ def parse_args():
         "--role",
         required=False,
         type=str,
-        default=None,
         action="store",
         help="AWS Profile"
     )
@@ -68,7 +67,8 @@ def client_profile(profile, region):
 
 def client_role(role, region):
 
-    assumed_role = client.assume_role(
+    sts_client = boto3.client('sts')
+    assumed_role = sts_client.assume_role(
         RoleArn=role,
         RoleSessionName="AssumeRoleSession1",
         DurationSeconds=1800
@@ -119,9 +119,13 @@ def main():
     logger.info("Application started")
     args = parse_args()
 
-    if not args.role:
-        ce_client = client_profile(args.profile, args.region)
-    ce_client = client_role(args.profile, args.region)
+    try:
+        if args.role:
+            ce_client = client_role(args.role, args.region)
+        else:
+            ce_client = client_profile(args.role, args.region)
+    except ClientError as e:
+        logger.exception(f"Something went wrong {e}")
 
     data = get_bill_by_period(ce_client, args.start, args.end)
 
