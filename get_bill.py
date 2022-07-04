@@ -57,13 +57,11 @@ def client(profile, role):
         ce_client = session.client("ce")
 
         return ce_client
-    
+
     session = boto3.Session(profile_name=profile)
     ce_client = session.client("ce")
 
     return ce_client
-        
-
 
 
 def get_bill_by_period(ce_client, start: str, end: str) -> list:

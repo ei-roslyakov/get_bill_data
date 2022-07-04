@@ -1,6 +1,5 @@
 ## Script for getting billing data from AWS Cost Explorer  
 ## How to use  
-
 ### Install dependencies
 
 ```python
