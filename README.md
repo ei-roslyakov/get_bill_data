@@ -1,7 +1,17 @@
-## Script for getting billing data from AWS Cost Explorer
+## Script for getting billing data from AWS Cost Explorer  
+## How to use  
 
+### Install dependencies
 
-### Sript arguments
+```python
+pip3 install -r requirements.txt 
+```
+### Run the script
+```python
+python3 ./get_bill.py --profile=rei-prod --start='2022-01-01' --end='2022-06-01'
+```
+
+### Script arguments
 | Name                 | Description    | Default    |
 | -------------------  | ---------------|------------|
 | `--profile`          | AWS profile to get access to the Cost Explorer | default |
