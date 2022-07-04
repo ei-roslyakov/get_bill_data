@@ -1,0 +1,36 @@
+Parameters :
+  AccID:
+    Description : AWS Account ID
+    Type: String
+    Default: 673182026046
+    ConstraintDescription : AWS Account ID must exist
+  IamRoleName:
+    Description : Role Name
+    Type: String
+    Default: su-get-bill-data-access
+Resources:
+  GetBill:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${AccID}:root"
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      RoleName: { "Ref" : "IamRoleName" }
+      Policies:
+        - PolicyName: su-get-billing-data
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: 'aws-portal:View*'
+                Resource: '*'
+              - Effect: Deny
+                Action: 'aws-portal:*Account'
+                Resource: '*'
