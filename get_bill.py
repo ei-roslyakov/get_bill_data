@@ -18,7 +18,15 @@ def parse_args():
         "--profile",
         required=False,
         type=str,
-        default="rei-prod",
+        default="default",
+        action="store",
+        help="AWS Profile"
+    )
+    parsers.add_argument(
+        "--role",
+        required=False,
+        type=str,
+        default=None,
         action="store",
         help="AWS Profile"
     )
@@ -42,11 +50,20 @@ def parse_args():
     return parsers.parse_args()
 
 
-def client(profile):
+def client(profile, role):
+
+    if not role:
+        session = boto3.Session(profile_name=profile)
+        ce_client = session.client("ce")
+
+        return ce_client
+    
     session = boto3.Session(profile_name=profile)
     ce_client = session.client("ce")
 
     return ce_client
+        
+
 
 
 def get_bill_by_period(ce_client, start: str, end: str) -> list:
@@ -71,7 +88,6 @@ def pretty_console_output(data: list) -> None:
     p_data = [header]
 
     for item in data["ResultsByTime"]:
-        print(item)
         data_to_write = [item["TimePeriod"]["Start"], item["TimePeriod"]["End"], item["Total"]["BlendedCost"]["Amount"]]
         p_data.append(data_to_write)
 
@@ -84,7 +100,7 @@ def pretty_console_output(data: list) -> None:
 def main():
     logger.info("Application started")
     args = parse_args()
-    ce_client = client(args.profile)
+    ce_client = client(args.profile, args.role)
 
     start_date = args.start
     end_date   = args.end
