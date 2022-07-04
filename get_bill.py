@@ -23,6 +23,14 @@ def parse_args():
         help="AWS Profile"
     )
     parsers.add_argument(
+        "--region",
+        required=False,
+        type=str,
+        default="eu-west-2",
+        action="store",
+        help="AWS Profile"
+    )
+    parsers.add_argument(
         "--role",
         required=False,
         type=str,
@@ -50,15 +58,27 @@ def parse_args():
     return parsers.parse_args()
 
 
-def client(profile, role):
+def client_profile(profile, region):
 
-    if not role:
-        session = boto3.Session(profile_name=profile)
-        ce_client = session.client("ce")
+    session = boto3.Session(profile_name=profile, region_name=region)
+    ce_client = session.client("ce")
 
-        return ce_client
+    return ce_client
 
-    session = boto3.Session(profile_name=profile)
+
+def client_role(role, region):
+
+    assumed_role = client.assume_role(
+        RoleArn=role,
+        RoleSessionName="AssumeRoleSession1",
+        DurationSeconds=1800
+    )
+    session = boto3.Session(
+        aws_access_key_id=assumed_role['Credentials']['AccessKeyId'],
+        aws_secret_access_key=assumed_role['Credentials']['SecretAccessKey'],
+        aws_session_token=assumed_role['Credentials']['SessionToken'],
+        region_name=region
+    )
     ce_client = session.client("ce")
 
     return ce_client
@@ -98,12 +118,12 @@ def pretty_console_output(data: list) -> None:
 def main():
     logger.info("Application started")
     args = parse_args()
-    ce_client = client(args.profile, args.role)
 
-    start_date = args.start
-    end_date   = args.end
+    if not args.role:
+        ce_client = client_profile(args.profile, args.region)
+    ce_client = client_role(args.profile, args.region)
 
-    data = get_bill_by_period(ce_client, start_date, end_date)
+    data = get_bill_by_period(ce_client, args.start, args.end)
 
     pretty_console_output(data)
 

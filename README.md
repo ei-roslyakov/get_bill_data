@@ -14,6 +14,7 @@ python3 ./get_bill.py --profile=rei-prod --start='2022-01-01' --end='2022-06-01'
 | Name                 | Description    | Default    |
 | -------------------  | ---------------|------------|
 | `--profile`          | AWS profile to get access to the Cost Explorer | default |
+| `--profile`          | The default AWS Region to use | eu-west-2 |
 | `--role_arn`         | AWS role to get access to the Cost Explorer | none |
 | `--start`            | The beginning of the time period | 2022-01-01 |
 | `--end`              | The end of the time period | 2022-06-01 |
