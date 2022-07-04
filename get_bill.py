@@ -67,16 +67,16 @@ def client_profile(profile, region):
 
 def client_role(role, region):
 
-    sts_client = boto3.client('sts')
+    sts_client = boto3.client("sts")
     assumed_role = sts_client.assume_role(
         RoleArn=role,
         RoleSessionName="AssumeRoleSession1",
         DurationSeconds=1800
     )
     session = boto3.Session(
-        aws_access_key_id=assumed_role['Credentials']['AccessKeyId'],
-        aws_secret_access_key=assumed_role['Credentials']['SecretAccessKey'],
-        aws_session_token=assumed_role['Credentials']['SessionToken'],
+        aws_access_key_id=assumed_role["Credentials"]["AccessKeyId"],
+        aws_secret_access_key=assumed_role["Credentials"]["SecretAccessKey"],
+        aws_session_token=assumed_role["Credentials"]["SessionToken"],
         region_name=region
     )
     ce_client = session.client("ce")
