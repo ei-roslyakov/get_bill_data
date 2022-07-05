@@ -198,7 +198,7 @@ def write_data(project: str, data: list) -> None:
 
     if not os.path.exists(f"./report/{project}.xlsx"):
         logger.info("File is missing, I will create one for you")
-        with pd.ExcelWriter(f"./report/{project}.xlsx", engine="xlsxwriter") as writer:
+        with pd.ExcelWriter(f"./report/{project}.xlsx", engine="openpyxl") as writer:
             df.to_excel(writer, sheet_name=time_period, index=False)
     else:
         with pd.ExcelWriter(f"./report/{project}.xlsx", engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
