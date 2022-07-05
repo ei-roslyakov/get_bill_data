@@ -100,19 +100,62 @@ def get_bill_by_period(ce_client, start: str, end: str) -> list:
         logger.exception(f"Something went wrong {e.response['Error']['Message']}")
 
 
-def pretty_console_output(data: list) -> None:
+def get_bill_by_period_per_service(ce_client, start: str, end: str) -> list:
+
+    logger.info(f"Getting data for period {start} - {end}")
+    try:
+        response = ce_client.get_cost_and_usage(
+            TimePeriod = {
+                "Start": start,
+                "End":  end },
+            Granularity="MONTHLY",
+            Metrics=["BlendedCost"],
+                GroupBy = [
+                {
+                    "Type": "DIMENSION",
+                    "Key": "SERVICE"
+                }
+            ]
+        )
+        return response
+    except ClientError as e:
+        logger.exception(f"Something went wrong {e.response['Error']['Message']}")
+
+
+def pretty_console_output_bill_by_period(data: list) -> None:
 
     header = ["Start", "End", "Total"]
-    p_data = [header]
+    ordered_data = [header]
 
     for item in data["ResultsByTime"]:
         data_to_write = [item["TimePeriod"]["Start"], item["TimePeriod"]["End"], item["Total"]["BlendedCost"]["Amount"]]
-        p_data.append(data_to_write)
+        ordered_data.append(data_to_write)
 
-    table = AsciiTable(p_data)
+    table = AsciiTable(ordered_data)
     table.inner_row_border = True
 
     print(table.table)
+
+
+def pretty_console_output_bill_by_period_per_service(data: list) -> None:
+
+    header = ["Service", "Total", "Unit", "TimePeriod"]
+
+    for item in data["ResultsByTime"]:
+        ordered_data = [header]
+        time_period = f"{item['TimePeriod']['Start']}-{item['TimePeriod']['End']}"
+        for item in item["Groups"]:
+            data_to_write = [
+                item["Keys"][0], item["Metrics"]["BlendedCost"]["Amount"],
+                item["Metrics"]["BlendedCost"]["Unit"],
+                time_period
+                ]
+            ordered_data.append(data_to_write)
+
+        table = AsciiTable(ordered_data)
+        table.inner_row_border = False
+
+        print(table.table)
 
 
 def main():
@@ -123,13 +166,15 @@ def main():
         if args.role:
             ce_client = client_role(args.role, args.region)
         else:
-            ce_client = client_profile(args.role, args.region)
+            ce_client = client_profile(args.profile, args.region)
     except ClientError as e:
         logger.exception(f"Something went wrong {e}")
 
     data = get_bill_by_period(ce_client, args.start, args.end)
+    pretty_console_output_bill_by_period(data)
 
-    pretty_console_output(data)
+    data_per_service = get_bill_by_period_per_service(ce_client, args.start, args.end)
+    pretty_console_output_bill_by_period_per_service(data_per_service)
 
     logger.info("Application finished")
 
