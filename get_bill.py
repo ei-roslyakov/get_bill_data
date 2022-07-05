@@ -34,6 +34,14 @@ def parse_args():
         help="The project name"
     )
     parsers.add_argument(
+        "--report",
+        required=False,
+        type=bool,
+        default=False,
+        action=argparse.BooleanOptionalAction,
+        help="If true, will create exel report in folder report"
+    )
+    parsers.add_argument(
         "--region",
         required=False,
         type=str,
@@ -210,13 +218,14 @@ def main():
     except ClientError as e:
         logger.exception(f"Something went wrong {e}")
 
-    # data = get_bill_by_period(ce_client, args.start, args.end)
-    # pretty_console_output_bill_by_period(data)
+    data = get_bill_by_period(ce_client, args.start, args.end)
+    pretty_console_output_bill_by_period(data)
 
     data_per_service = get_bill_by_period_per_service(ce_client, args.start, args.end)
-    # pretty_console_output_bill_by_period_per_service(data_per_service)
+    pretty_console_output_bill_by_period_per_service(data_per_service)
 
-    write_data(args.project, data_per_service)
+    if args.report:
+        write_data(args.project, data_per_service)
 
     logger.info("Application finished")
 

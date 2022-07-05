@@ -23,6 +23,7 @@ python3 ./get_bill.py --role='arn:aws:iam::948691256895:role/su-get-bill-data-ac
 | `--role_arn`         | AWS role to get access to the Cost Explorer | none |
 | `--start`            | The beginning of the time period | 2022-01-01 |
 | `--end`              | The end of the time period | 2022-06-01 |
+| `--report`              | If true, will create exel report in folder report | False |
 
 
 ### Output example
