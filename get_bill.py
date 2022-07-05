@@ -163,11 +163,11 @@ def pretty_console_output_bill_by_period_per_service(data: list) -> None:
     for item in data["ResultsByTime"]:
         ordered_data = [header]
         time_period = f"{item['TimePeriod']['Start']} - {item['TimePeriod']['End']}"
-        for item in item["Groups"]:
+        for resource in item["Groups"]:
             data_to_write = [
-                item["Keys"][0],
-                item["Metrics"]["BlendedCost"]["Amount"],
-                item["Metrics"]["BlendedCost"]["Unit"],
+                resource["Keys"][0],
+                resource["Metrics"]["BlendedCost"]["Amount"],
+                resource["Metrics"]["BlendedCost"]["Unit"],
                 time_period
             ]
             ordered_data.append(data_to_write)
@@ -185,12 +185,12 @@ def write_data(project: str, data: list) -> None:
     for item in data["ResultsByTime"]:
         time_period = f"{item['TimePeriod']['Start']} - {item['TimePeriod']['End']}"
         time_period = time_period
-        for item in item["Groups"]:
+        for resource in item["Groups"]:
             data_to_write = {
-                "Service" : item["Keys"][0],
-                "Total" : item["Metrics"]["BlendedCost"]["Amount"],
-                "Unit" : item["Metrics"]["BlendedCost"]["Unit"],
-                "TimePeriod" : time_period
+                "Service": resource["Keys"][0],
+                "Total": resource["Metrics"]["BlendedCost"]["Amount"],
+                "Unit": resource["Metrics"]["BlendedCost"]["Unit"],
+                "TimePeriod": time_period
             }
             ordered_data.append(data_to_write)
 
@@ -198,11 +198,11 @@ def write_data(project: str, data: list) -> None:
 
     if not os.path.exists(f"./report/{project}.xlsx"):
         logger.info("File is missing, I will create one for you")
-        with pd.ExcelWriter(f"./report/{project}.xlsx", engine="openpyxl",) as writer:
-            df.to_excel(writer, sheet_name=time_period)
+        with pd.ExcelWriter(f"./report/{project}.xlsx", engine="xlsxwriter") as writer:
+            df.to_excel(writer, sheet_name=time_period, index=False)
     else:
         with pd.ExcelWriter(f"./report/{project}.xlsx", engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
-            df.to_excel(writer, sheet_name=time_period)
+            df.to_excel(writer, sheet_name=time_period, index=False)
 
 
 def main():

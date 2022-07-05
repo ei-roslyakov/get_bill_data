@@ -132,3 +132,4 @@ report/*
 !report/no_data
 
 **/.DS_Store
+.idea
