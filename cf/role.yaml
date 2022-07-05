@@ -2,7 +2,6 @@ Parameters :
   AccID:
     Description : AWS Account ID
     Type: String
-    Default: 673182026046
     ConstraintDescription : AWS Account ID must exist
   IamRoleName:
     Description : Role Name
