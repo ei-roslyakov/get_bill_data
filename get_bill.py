@@ -124,11 +124,11 @@ def get_bill_by_period_per_service(ce_client, start: str, end: str) -> list:
 
 def pretty_console_output_bill_by_period(data: list) -> None:
 
-    header = ["Start", "End", "Total"]
+    header = ["TimePeriod", "Total"]
     ordered_data = [header]
 
     for item in data["ResultsByTime"]:
-        data_to_write = [item["TimePeriod"]["Start"], item["TimePeriod"]["End"], item["Total"]["BlendedCost"]["Amount"]]
+        data_to_write = [f"{item['TimePeriod']['Start']} - {item['TimePeriod']['End']}", item["Total"]["BlendedCost"]["Amount"]]
         ordered_data.append(data_to_write)
 
     table = AsciiTable(ordered_data)
@@ -143,7 +143,7 @@ def pretty_console_output_bill_by_period_per_service(data: list) -> None:
 
     for item in data["ResultsByTime"]:
         ordered_data = [header]
-        time_period = f"{item['TimePeriod']['Start']}-{item['TimePeriod']['End']}"
+        time_period = f"{item['TimePeriod']['Start']} - {item['TimePeriod']['End']}"
         for item in item["Groups"]:
             data_to_write = [
                 item["Keys"][0], item["Metrics"]["BlendedCost"]["Amount"],
