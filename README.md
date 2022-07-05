@@ -1,3 +1,4 @@
+![workflow](https://github.com/ei-roslyakov/get_bill_data/actions/workflows/tests.yml/badge.svg)
 ## Script for getting billing data from AWS Cost Explorer  
 ## How to use  
 ### Install dependencies
