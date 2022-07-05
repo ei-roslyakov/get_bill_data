@@ -2,3 +2,5 @@ boto3
 loguru
 argparse
 terminaltables
+openpyxl
+pandas

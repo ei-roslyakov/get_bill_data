@@ -1,10 +1,13 @@
 import argparse
+import os.path
 
 import boto3
 
 from botocore.exceptions import ClientError
 
 import loguru
+
+import pandas as pd
 
 from terminaltables import AsciiTable
 
@@ -21,6 +24,14 @@ def parse_args():
         default="default",
         action="store",
         help="AWS Profile"
+    )
+    parsers.add_argument(
+        "--project",
+        required=False,
+        type=str,
+        default="no_name",
+        action="store",
+        help="The project name"
     )
     parsers.add_argument(
         "--region",
@@ -110,7 +121,7 @@ def get_bill_by_period_per_service(ce_client, start: str, end: str) -> list:
                 "End":  end },
             Granularity="MONTHLY",
             Metrics=["BlendedCost"],
-                GroupBy = [
+            GroupBy = [
                 {
                     "Type": "DIMENSION",
                     "Key": "SERVICE"
@@ -146,19 +157,48 @@ def pretty_console_output_bill_by_period_per_service(data: list) -> None:
         time_period = f"{item['TimePeriod']['Start']} - {item['TimePeriod']['End']}"
         for item in item["Groups"]:
             data_to_write = [
-                item["Keys"][0], item["Metrics"]["BlendedCost"]["Amount"],
+                item["Keys"][0],
+                item["Metrics"]["BlendedCost"]["Amount"],
                 item["Metrics"]["BlendedCost"]["Unit"],
                 time_period
-                ]
+            ]
             ordered_data.append(data_to_write)
-
         table = AsciiTable(ordered_data)
         table.inner_row_border = False
 
         print(table.table)
 
 
+def write_data(project: str, data: list) -> None:
+
+    ordered_data = []
+    time_period = None
+
+    for item in data["ResultsByTime"]:
+        time_period = f"{item['TimePeriod']['Start']} - {item['TimePeriod']['End']}"
+        time_period = time_period
+        for item in item["Groups"]:
+            data_to_write = {
+                "Service" : item["Keys"][0],
+                "Total" : item["Metrics"]["BlendedCost"]["Amount"],
+                "Unit" : item["Metrics"]["BlendedCost"]["Unit"],
+                "TimePeriod" : time_period
+            }
+            ordered_data.append(data_to_write)
+
+    df = pd.DataFrame(ordered_data)
+
+    if not os.path.exists(f"./report/{project}.xlsx"):
+        logger.info("File is missing, I will create one for you")
+        with pd.ExcelWriter(f"./report/{project}.xlsx", engine="openpyxl",) as writer:
+            df.to_excel(writer, sheet_name=time_period)
+    else:
+        with pd.ExcelWriter(f"./report/{project}.xlsx", engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+            df.to_excel(writer, sheet_name=time_period)
+
+
 def main():
+
     logger.info("Application started")
     args = parse_args()
 
@@ -170,11 +210,13 @@ def main():
     except ClientError as e:
         logger.exception(f"Something went wrong {e}")
 
-    data = get_bill_by_period(ce_client, args.start, args.end)
-    pretty_console_output_bill_by_period(data)
+    # data = get_bill_by_period(ce_client, args.start, args.end)
+    # pretty_console_output_bill_by_period(data)
 
     data_per_service = get_bill_by_period_per_service(ce_client, args.start, args.end)
-    pretty_console_output_bill_by_period_per_service(data_per_service)
+    # pretty_console_output_bill_by_period_per_service(data_per_service)
+
+    write_data(args.project, data_per_service)
 
     logger.info("Application finished")
 
