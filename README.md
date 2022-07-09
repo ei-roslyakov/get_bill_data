@@ -6,35 +6,43 @@
 ```python
 pip3 install -r requirements.txt 
 ```
-### To use AWS profile (profile must be configured)
+### To use AWS profile (profile must be configured, this option is only available with console report )
 ```python
-python3 ./get_bill.py --profile=rei-prod --start='2022-01-01' --end='2022-06-01'
+python3 ./get_bill.py --profile=rei-prod --month=06 --year=2022 --report-to-console --no-report-to-file
 ```
 
-### To use role
+### To make report and write it to the exel file
+#### This is the default behavior, the application will read information from an excel file in the folder report (first two columns) and request billing data from AWS
 ```python
-python3 ./get_bill.py --role='arn:aws:iam::948691256895:role/su-get-bill-data-access' --start='2022-01-01' --end='2022-06-01'
+python3 ./get_bill.py --month=06 --year=2022
 ```
+#### this command will add a new column for each project with date and amount
+![report](/files/report.jpg?raw=true "report")
 
 ### Script arguments
 | Name         | Description                                       | Default    |
 |--------------|---------------------------------------------------|------------|
 | `--profile`  | AWS profile to get access to the Cost Explorer    | default    |
-| `--profile`  | The default AWS Region to use                     | eu-west-2  |
 | `--role_arn` | AWS role to get access to the Cost Explorer       | none       |
 | `--month`    | The report will be created for this month         | 2022-01    |
 | `--year`     | The report will be created for this year          | 2022-02-01 |
-| `--report`   | If true, will create exel report in folder report | False      |
-| `--report-to-console`   | If true, will create report to console            | False      |
+| `--report-to-file`   | If true, will create exel report in folder report | False      |
+| `--report-to-console`   | If true, will print report to console             | False      |
 
 
 ### Output example
 ```
-+-------------------------+----------------+
-| TimePeriod              | Total          |
-+-------------------------+----------------+
-| 2022-01-01 - 2022-02-01 | 5482.017205524 |
-+-------------------------+----------------+
++-------------------------------------+-------+------+-------------------------+
+| Service                             | Total | Unit | TimePeriod              |
++-------------------------------------+-------+------+-------------------------+
+| AWS Key Management Service          | 0.0   | USD  | 2022-05-01 - 2022-06-01 |
+| Amazon EC2 Container Registry (ECR) | 0.0   | USD  | 2022-05-01 - 2022-06-01 |
+| Amazon Elastic Load Balancing       | 4.37  | USD  | 2022-05-01 - 2022-06-01 |
+| Amazon Route 53                     | 1.01  | USD  | 2022-05-01 - 2022-06-01 |
+| Amazon Simple Storage Service       | 0.32  | USD  | 2022-05-01 - 2022-06-01 |
+| AmazonCloudWatch                    | 0.0   | USD  | 2022-05-01 - 2022-06-01 |
+| Tax                                 | 0.0   | USD  | 2022-05-01 - 2022-06-01 |
++-------------------------------------+-------+------+-------------------------+
 
 +-------------------------------------------------+----------------+------+-------------------------+
 | Service                                         | Total          | Unit | TimePeriod              |

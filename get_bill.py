@@ -53,20 +53,6 @@ def parse_args():
         help="AWS Profile"
     )
     parsers.add_argument(
-        "--account-id",
-        required=False,
-        type=str,
-        action="store",
-        help="AWS account ID"
-    )
-    parsers.add_argument(
-        "--project-name",
-        required=False,
-        type=str,
-        action="store",
-        help="Project name"
-    )
-    parsers.add_argument(
         "--month",
         required=False,
         type=str,
@@ -86,15 +72,15 @@ def parse_args():
     return parsers.parse_args()
 
 
-def client_profile(profile, region):
+def client_profile(profile, region: str):
 
-    session = boto3.Session(profile_name=profile)
+    session = boto3.Session(profile_name=profile, region_name=region)
     ce_client = session.client("ce")
 
     return ce_client
 
 
-def client_role(acc_id: str):
+def client_role(acc_id: str, region: str):
 
     sts_client = boto3.client("sts")
     assumed_role = sts_client.assume_role(
@@ -106,15 +92,16 @@ def client_role(acc_id: str):
         aws_access_key_id=assumed_role["Credentials"]["AccessKeyId"],
         aws_secret_access_key=assumed_role["Credentials"]["SecretAccessKey"],
         aws_session_token=assumed_role["Credentials"]["SessionToken"],
+        region_name=region
     )
     ce_client = session.client("ce")
 
     return ce_client
 
 
-def get_bill_by_period(ce_client, start: str, end: str) -> list:
+def get_bill_by_period(ce_client, start: str, end: str, project='NoN') -> list:
 
-    logger.info(f"Getting data for period {start} - {end}")
+    logger.info(f"{project}: Getting data for period {start} - {end}")
     try:
         response = ce_client.get_cost_and_usage(
             TimePeriod={
@@ -128,9 +115,9 @@ def get_bill_by_period(ce_client, start: str, end: str) -> list:
         logger.exception(f"Something went wrong {e.response['Error']['Message']}")
 
 
-def get_bill_by_period_per_service(ce_client, start: str, end: str) -> list:
+def get_bill_by_period_per_service(ce_client, start: str, end: str, project='NoN') -> list:
 
-    logger.info(f"Getting data for period {start} - {end}")
+    logger.info(f"{project}: Getting data for period {start} - {end}")
     try:
         response = ce_client.get_cost_and_usage(
             TimePeriod = {
@@ -150,9 +137,9 @@ def get_bill_by_period_per_service(ce_client, start: str, end: str) -> list:
         logger.exception(f"Something went wrong {e.response['Error']['Message']}")
 
 
-def pretty_console_output_bill_by_period(project_name: str, account_id: str, data: list) -> None:
+def pretty_console_output_bill_by_period(project_name: str, data: list) -> None:
 
-    header = ["ProjectName", "AccountID", "TimePeriod", "Amount", "Unit"]
+    header = ["ProjectName", "TimePeriod", "Amount", "Unit"]
     ordered_data = [header]
 
     def symbol_replace(text):
@@ -160,9 +147,8 @@ def pretty_console_output_bill_by_period(project_name: str, account_id: str, dat
 
     for item in data["ResultsByTime"]:
         data_to_write = [project_name,
-                         account_id,
                          f"{symbol_replace(item['TimePeriod']['Start'])}-{symbol_replace(item['TimePeriod']['End'])}",
-                         item["Total"]["BlendedCost"]["Amount"], item["Total"]["BlendedCost"]["Unit"]]
+                         round(float(item["Total"]["BlendedCost"]["Amount"]), 2), item["Total"]["BlendedCost"]["Unit"]]
         ordered_data.append(data_to_write)
 
     table = AsciiTable(ordered_data)
@@ -181,7 +167,7 @@ def pretty_console_output_bill_by_period_per_service(data: list) -> None:
         for resource in item["Groups"]:
             data_to_write = [
                 resource["Keys"][0],
-                resource["Metrics"]["BlendedCost"]["Amount"],
+                round(float(resource["Metrics"]["BlendedCost"]["Amount"]), 2),
                 resource["Metrics"]["BlendedCost"]["Unit"],
                 time_period
             ]
@@ -213,7 +199,7 @@ def get_date_range(year: str, month: str):
         return {"start": start, "end": end}
 
 
-def get_account_info(year: str, month: str):
+def get_account_info(year: str, month: str, region: str):
 
     date_range = get_date_range(year, month)
 
@@ -222,10 +208,10 @@ def get_account_info(year: str, month: str):
     data_to_write = []
     for item in df.to_dict("records"):
         try:
-            ce_client = client_role(item["AccountID"])
-            data = get_bill_by_period(ce_client, date_range["start"], date_range["end"])
+            ce_client = client_role(item["AccountID"], region)
+            data = get_bill_by_period(ce_client, date_range["start"], date_range["end"], item["AccountName"])
             for amount_value in data["ResultsByTime"]:
-                item[f"{year}-{month}"] = amount_value["Total"]["BlendedCost"]["Amount"]
+                item[f"{year}-{month}"] = round(float(amount_value["Total"]["BlendedCost"]["Amount"]), 2)
                 data_to_write.append(item)
         except ClientError as e:
             logger.exception(f"Something went wrong {e.response['Error']['Message']}")
@@ -240,7 +226,7 @@ def get_account_info(year: str, month: str):
         with pd.ExcelWriter(f"report/{REPORT_FILE_NAME}.xlsx", engine="xlsxwriter") as writer:
             df.to_excel(writer, sheet_name=year, index=False)
             for column in df:
-                column_width = max(df[column].astype(str).map(len).max(), len(column))
+                column_width = max(df[column].astype(str).map(len).max(), len(column)) + 3
                 col_idx = df.columns.get_loc(column)
                 writer.sheets[f"{year}"].set_column(col_idx, col_idx, column_width)
 
@@ -255,23 +241,19 @@ def main():
 
     if args.report_to_console:
         try:
-            if args.account_id:
-                ce_client = client_role(args.account_id)
-            else:
-                ce_client = client_profile(args.profile)
+            ce_client = client_profile(args.profile, args.region)
+
+            date_range = get_date_range(args.year, args.month)
+            data = get_bill_by_period(ce_client, date_range["start"], date_range["end"])
+            pretty_console_output_bill_by_period(args.profile, data)
+
+            data_per_service = get_bill_by_period_per_service(ce_client, date_range["start"], date_range["end"])
+            pretty_console_output_bill_by_period_per_service(data_per_service)
         except Exception as e:
             logger.exception(f"Something went wrong {e}")
 
-        date_range = get_date_range(args.year, args.month)
-
-        data = get_bill_by_period(ce_client, date_range["start"], date_range["end"])
-        pretty_console_output_bill_by_period(args.project_name, args.account_id, data)
-
-        data_per_service = get_bill_by_period_per_service(ce_client, date_range["start"], date_range["end"])
-        pretty_console_output_bill_by_period_per_service(data_per_service)
-
     if args.report_to_file:
-        get_account_info(args.year, args.month)
+        get_account_info(args.year, args.month, args.region)
 
     logger.info("Application finished")
 
