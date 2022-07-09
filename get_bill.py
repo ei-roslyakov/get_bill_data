@@ -14,7 +14,7 @@ from terminaltables import AsciiTable
 logger = loguru.logger
 
 
-REPORT_FILE_NAME = 'no_name'
+REPORT_FILE_NAME = "report"
 
 
 def parse_args():
@@ -159,7 +159,10 @@ def pretty_console_output_bill_by_period(project_name: str, account_id: str, dat
         return text.replace("-", ":")
 
     for item in data["ResultsByTime"]:
-        data_to_write = [project_name, account_id, f"{symbol_replace(item['TimePeriod']['Start'])}-{symbol_replace(item['TimePeriod']['End'])}", item["Total"]["BlendedCost"]["Amount"], item["Total"]["BlendedCost"]["Unit"]]
+        data_to_write = [project_name,
+                         account_id,
+                         f"{symbol_replace(item['TimePeriod']['Start'])}-{symbol_replace(item['TimePeriod']['End'])}",
+                         item["Total"]["BlendedCost"]["Amount"], item["Total"]["BlendedCost"]["Unit"]]
         ordered_data.append(data_to_write)
 
     table = AsciiTable(ordered_data)
@@ -245,19 +248,10 @@ def get_account_info(year: str, month: str):
         logger.exception(f"Something went wrong {e}")
 
 
-
 def main():
 
     logger.info("Application started")
     args = parse_args()
-
-    try:
-        if args.account_id:
-            ce_client = client_role(args.account_id)
-        else:
-            ce_client = client_profile(args.profile)
-    except Exception as e:
-        logger.exception(f"Something went wrong {e}")
 
     if args.report_to_console:
         try:
@@ -269,10 +263,11 @@ def main():
             logger.exception(f"Something went wrong {e}")
 
         date_range = get_date_range(args.year, args.month)
+
         data = get_bill_by_period(ce_client, date_range["start"], date_range["end"])
         pretty_console_output_bill_by_period(args.project_name, args.account_id, data)
 
-        data_per_service = get_bill_by_period_per_service(ce_client, args.year, args.month)
+        data_per_service = get_bill_by_period_per_service(ce_client, date_range["start"], date_range["end"])
         pretty_console_output_bill_by_period_per_service(data_per_service)
 
     if args.report_to_file:

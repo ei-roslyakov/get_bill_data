@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 report/*
-!report/no_data
+!report/template.xlsx
 
 **/.DS_Store
 .idea
