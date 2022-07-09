@@ -99,7 +99,7 @@ def client_role(acc_id: str, region: str):
     return ce_client
 
 
-def get_bill_by_period(ce_client, start: str, end: str, project='NoN') -> list:
+def get_bill_by_period(ce_client, start: str, end: str, project="NoN") -> list:
 
     logger.info(f"{project}: Getting data for period {start} - {end}")
     try:
@@ -115,7 +115,7 @@ def get_bill_by_period(ce_client, start: str, end: str, project='NoN') -> list:
         logger.exception(f"Something went wrong {e.response['Error']['Message']}")
 
 
-def get_bill_by_period_per_service(ce_client, start: str, end: str, project='NoN') -> list:
+def get_bill_by_period_per_service(ce_client, start: str, end: str, project="NoN") -> list:
 
     logger.info(f"{project}: Getting data for period {start} - {end}")
     try:
