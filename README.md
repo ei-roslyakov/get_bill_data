@@ -22,8 +22,8 @@ python3 ./get_bill.py --month=06 --year=2022
 | Name         | Description                                       | Default    |
 |--------------|---------------------------------------------------|------------|
 | `--profile`  | AWS profile to get access to the Cost Explorer    | default    |
-| `--month`    | The report will be created for this month         | 2022-01    |
-| `--year`     | The report will be created for this year          | 2022-02-01 |
+| `--month`    | The report will be created for this month         | 01    |
+| `--year`     | The report will be created for this year          | 2022 |
 | `--report-to-file`   | If true, will create exel report in folder report | False      |
 | `--report-to-console`   | If true, will print report to console             | False      |
 
