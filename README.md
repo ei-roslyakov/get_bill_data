@@ -17,6 +17,7 @@ python3 ./get_bill.py --profile=rei-prod --month=06 --year=2022 --report-to-cons
 python3 ./get_bill.py --month=06 --year=2022
 ```
 #### this command will add a new column for each project with date and amount
+### Exel output example
 ![report](/files/report.jpg "report")
 
 ### Script arguments
@@ -29,7 +30,7 @@ python3 ./get_bill.py --month=06 --year=2022
 | `--report-to-console`   | If true, will print report to console             | False      |
 
 
-### Output example
+### Console output example
 ```
 +-------------------------------------+-------+------+-------------------------+
 | Service                             | Total | Unit | TimePeriod              |
