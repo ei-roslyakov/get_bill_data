@@ -26,4 +26,5 @@ jobs:
 
       - name: Lint with flake8
         run: |
+          ls -al
           flake8 get_bill.py
