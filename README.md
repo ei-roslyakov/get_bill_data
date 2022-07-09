@@ -17,14 +17,15 @@ python3 ./get_bill.py --role='arn:aws:iam::948691256895:role/su-get-bill-data-ac
 ```
 
 ### Script arguments
-| Name                 | Description    | Default    |
-| -------------------  | ---------------|------------|
-| `--profile`          | AWS profile to get access to the Cost Explorer | default    |
-| `--profile`          | The default AWS Region to use | eu-west-2  |
-| `--role_arn`         | AWS role to get access to the Cost Explorer | none       |
-| `--start`            | The beginning of the time period | 2022-01-01 |
-| `--end`              | The end of the time period | 2022-02-01 |
-| `--report`              | If true, will create exel report in folder report | False      |
+| Name         | Description                                       | Default    |
+|--------------|---------------------------------------------------|------------|
+| `--profile`  | AWS profile to get access to the Cost Explorer    | default    |
+| `--profile`  | The default AWS Region to use                     | eu-west-2  |
+| `--role_arn` | AWS role to get access to the Cost Explorer       | none       |
+| `--month`    | The report will be created for this month         | 2022-01    |
+| `--year`     | The report will be created for this year          | 2022-02-01 |
+| `--report`   | If true, will create exel report in folder report | False      |
+| `--report-to-console`   | If true, will create report to console            | False      |
 
 
 ### Output example
