@@ -12,7 +12,7 @@ python3 ./get_bill.py --profile=rei-prod --month=06 --year=2022 --report-to-cons
 ```
 
 ### To make report and write it to the exel file
-#### This is the default behavior, the application will read information from an excel file in the folder report (first two columns) and request billing data from AWS
+#### This is the default behavior, the application will read information from an excel file in the folder _report_ (first two columns) and request billing data from AWS
 ```python
 python3 ./get_bill.py --month=06 --year=2022
 ```
