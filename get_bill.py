@@ -112,7 +112,8 @@ def get_bill_by_period(ce_client, start: str, end: str, project="NoN") -> list:
         )
         return response
     except ClientError as e:
-        logger.exception(f"Something went wrong {e.response['Error']['Message']}")
+        logger.exception(
+            f"Something went wrong {e.response['Error']['Message']}")
 
 
 def get_bill_by_period_per_service(ce_client, start: str, end: str, project="NoN") -> list:
@@ -120,12 +121,12 @@ def get_bill_by_period_per_service(ce_client, start: str, end: str, project="NoN
     logger.info(f"{project}: Getting data for period {start} - {end}")
     try:
         response = ce_client.get_cost_and_usage(
-            TimePeriod = {
+            TimePeriod={
                 "Start": start,
-                "End":  end },
+                "End":  end},
             Granularity="MONTHLY",
             Metrics=["BlendedCost"],
-            GroupBy = [
+            GroupBy=[
                 {
                     "Type": "DIMENSION",
                     "Key": "SERVICE"
@@ -134,7 +135,8 @@ def get_bill_by_period_per_service(ce_client, start: str, end: str, project="NoN
         )
         return response
     except ClientError as e:
-        logger.exception(f"Something went wrong {e.response['Error']['Message']}")
+        logger.exception(
+            f"Something went wrong {e.response['Error']['Message']}")
 
 
 def pretty_console_output_bill_by_period(project_name: str, data: list) -> None:
@@ -180,10 +182,12 @@ def pretty_console_output_bill_by_period_per_service(data: list) -> None:
 
 def get_date_range(year: str, month: str):
 
-    suitable_value_for_month = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+    suitable_value_for_month = ["01", "02", "03", "04",
+                                "05", "06", "07", "08", "09", "10", "11", "12"]
 
     if month not in suitable_value_for_month:
-        logger.exception(f"You have provided the wrong month number {month}, available values are {suitable_value_for_month} ")
+        logger.exception(
+            f"You have provided the wrong month number {month}, available values are {suitable_value_for_month} ")
         exit(1)
 
     if month == "01":
@@ -199,7 +203,7 @@ def get_date_range(year: str, month: str):
         return {"start": start, "end": end}
 
 
-def get_account_info(year: str, month: str, region: str):
+def make_report(year: str, month: str, region: str):
 
     date_range = get_date_range(year, month)
 
@@ -209,12 +213,15 @@ def get_account_info(year: str, month: str, region: str):
     for item in df.to_dict("records"):
         try:
             ce_client = client_role(item["AccountID"], region)
-            data = get_bill_by_period(ce_client, date_range["start"], date_range["end"], item["AccountName"])
+            data = get_bill_by_period(
+                ce_client, date_range["start"], date_range["end"], item["AccountName"])
             for amount_value in data["ResultsByTime"]:
-                item[f"{year}-{month}"] = round(float(amount_value["Total"]["BlendedCost"]["Amount"]), 2)
+                item[f"{year}-{month}"] = round(
+                    float(amount_value["Total"]["BlendedCost"]["Amount"]), 2)
                 data_to_write.append(item)
         except ClientError as e:
-            logger.exception(f"Something went wrong {e.response['Error']['Message']}")
+            logger.exception(
+                f"Something went wrong {e.response['Error']['Message']}")
         except Exception as e:
             logger.exception(f"Something went wrong {e}")
 
@@ -222,13 +229,34 @@ def get_account_info(year: str, month: str, region: str):
 
     try:
         logger.info("Making file backup")
-        os.rename(f"report/{REPORT_FILE_NAME}.xlsx", f"report/{REPORT_FILE_NAME}-backup.xlsx")
+        os.rename(f"report/{REPORT_FILE_NAME}.xlsx",
+                  f"report/{REPORT_FILE_NAME}-backup.xlsx")
         with pd.ExcelWriter(f"report/{REPORT_FILE_NAME}.xlsx", engine="xlsxwriter") as writer:
             df.to_excel(writer, sheet_name=year, index=False)
             for column in df:
-                column_width = max(df[column].astype(str).map(len).max(), len(column)) + 3
+                column_width = max(df[column].astype(
+                    str).map(len).max(), len(column)) + 3
                 col_idx = df.columns.get_loc(column)
-                writer.sheets[f"{year}"].set_column(col_idx, col_idx, column_width)
+                writer.sheets[f"{year}"].set_column(
+                    col_idx, col_idx, column_width)
+
+            workbook = writer.book
+            worksheet = writer.sheets[year]
+            position = 0
+
+            for item in range(len(data_to_write)):
+                chart = workbook.add_chart({"type": "line"})
+                chart.add_series({
+                    "categories": [f"{year}", 0, 2, 0, 15],
+                    "values": [f"{year}", 1 + item, 2, 1 + item, 15],
+                    "name": f"{df['AccountName'].values[item]}",
+                    "line": {"color": "red"},
+                })
+                chart.set_x_axis({"name": "Month", "position_axis": "on_tick"})
+                chart.set_y_axis({"name": "Price", "major_gridlines": {"visible": False}})
+                chart.set_legend({"position": "none"})
+                worksheet.insert_chart(f"O{20 + position}", chart)
+                position += 2
 
     except Exception as e:
         logger.exception(f"Something went wrong {e}")
@@ -244,16 +272,18 @@ def main():
             ce_client = client_profile(args.profile, args.region)
 
             date_range = get_date_range(args.year, args.month)
-            data = get_bill_by_period(ce_client, date_range["start"], date_range["end"])
+            data = get_bill_by_period(
+                ce_client, date_range["start"], date_range["end"])
             pretty_console_output_bill_by_period(args.profile, data)
 
-            data_per_service = get_bill_by_period_per_service(ce_client, date_range["start"], date_range["end"])
+            data_per_service = get_bill_by_period_per_service(
+                ce_client, date_range["start"], date_range["end"])
             pretty_console_output_bill_by_period_per_service(data_per_service)
         except Exception as e:
             logger.exception(f"Something went wrong {e}")
 
     if args.report_to_file:
-        get_account_info(args.year, args.month, args.region)
+        make_report(args.year, args.month, args.region)
 
     logger.info("Application finished")
 
