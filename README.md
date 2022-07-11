@@ -18,6 +18,8 @@ python3 ./get_bill.py --month=06 --year=2022
 ```
 #### this command will add a new column for each project with date and amount
 
+### !!! Make sure that you have created a report file with projects and account ids (you can copy the template file), this file uses as source data.
+
 ### Script arguments
 | Name         | Description                                       | Default    |
 |--------------|---------------------------------------------------|------------|
@@ -26,6 +28,7 @@ python3 ./get_bill.py --month=06 --year=2022
 | `--year`     | The report will be created for this year          | 2022 |
 | `--report-to-file`   | If true, will create exel report in folder report | True      |
 | `--report-to-console`   | If true, will print report to console             | False      |
+
 
 ### Exel output example
 ![report](/files/report.jpg "report")
