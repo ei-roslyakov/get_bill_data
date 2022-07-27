@@ -11,6 +11,12 @@ import pandas as pd
 
 from terminaltables import AsciiTable
 
+# from O365
+
+from office365.runtime.auth.client_credential import ClientCredential
+from office365.sharepoint.client_context import ClientContext
+from office365.runtime.auth.user_credential import UserCredential
+
 logger = loguru.logger
 
 
@@ -262,28 +268,55 @@ def make_report(year: str, month: str, region: str):
         logger.exception(f"Something went wrong {e}")
 
 
+def get_sharepoint_context():
+    logger.info("Getting creds")
+    sharepoint_url = 'https://sigmaukr.sharepoint.com'
+
+    client_credentials = ClientCredential()
+    ctx = ClientContext(sharepoint_url).with_credentials(client_credentials)
+
+    return ctx
+
+
+def upload_to_sharepoint():
+
+    ctx = get_sharepoint_context()
+
+    target_folder = ctx.web.get_folder_by_server_relative_url("sites/D004/Roslyakov")
+    logger.info("some log here")
+    try:
+        with open("report/report.xlsx", 'rb') as content_file:
+            file_content = content_file.read()
+            response = target_folder.upload_file("report.xlsx", file_content).execute_query()
+            print(response)
+    except Exception as e:
+        logger.exception(f"Something went wrong {e}")
+
+
 def main():
 
     logger.info("Application started")
     args = parse_args()
 
-    if args.report_to_console:
-        try:
-            ce_client = client_profile(args.profile, args.region)
-
-            date_range = get_date_range(args.year, args.month)
-            data = get_bill_by_period(
-                ce_client, date_range["start"], date_range["end"])
-            pretty_console_output_bill_by_period(args.profile, data)
-
-            data_per_service = get_bill_by_period_per_service(
-                ce_client, date_range["start"], date_range["end"])
-            pretty_console_output_bill_by_period_per_service(data_per_service)
-        except Exception as e:
-            logger.exception(f"Something went wrong {e}")
-
-    if args.report_to_file:
-        make_report(args.year, args.month, args.region)
+    # if args.report_to_console:
+    #     try:
+    #         ce_client = client_profile(args.profile, args.region)
+    #
+    #         date_range = get_date_range(args.year, args.month)
+    #         data = get_bill_by_period(
+    #             ce_client, date_range["start"], date_range["end"])
+    #         pretty_console_output_bill_by_period(args.profile, data)
+    #
+    #         data_per_service = get_bill_by_period_per_service(
+    #             ce_client, date_range["start"], date_range["end"])
+    #         pretty_console_output_bill_by_period_per_service(data_per_service)
+    #     except Exception as e:
+    #         logger.exception(f"Something went wrong {e}")
+    #
+    # if args.report_to_file:
+    #     make_report(args.year, args.month, args.region)
+    
+    go = upload_to_sharepoint()
 
     logger.info("Application finished")
 
